@@ -1,0 +1,2 @@
+This is a async file created by the node js upcomming node js develper
+ Im adding new line to the text file using a sync file append
