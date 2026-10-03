@@ -74,10 +74,42 @@ async function login(req, res) {
     .returning({
       id: userSessions.id,
     });
+
+  // After every successful login we will provide the session if to the user .
+  // on subsequent requests ahead the uers header will carry the session id .
   return res.json({
     msg: `Login Success `,
     sessionID: session.id,
   });
 }
+async function profile(req, res) {
+  const sessionKey = req.header("sessionID");
+  if (!sessionKey) {
+    return res.status(401).json({
+      msg: "You don't have access to view the page ",
+    });
+  }
+  const [data] = await db
+    .select({
+      name: usersTable.name,
+      email: usersTable.email,
+      id: usersTable.id,
+    })
+    .from(userSessions)
+    .innerJoin(usersTable, eq(usersTable.id, userSessions.user_id))
+    .where(eq(userSessions.id, sessionKey));
+
+  if (!data) {
+    return res.status(404).json({
+      msg: `You are not Authorized to view the page `,
+    });
+  }
+  return res.status(201).json({
+    id: data.id,
+    name: data.name,
+    email: data.email,
+  });
+}
 router.post("/login", login);
+router.post("/profile", profile);
 export default router;
